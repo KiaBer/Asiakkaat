@@ -6,7 +6,7 @@
 <meta charset="ISO-8859-1">
 <script src="scripts/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/main.css">
-<title>Muuta asiakas</title>
+<title>Lisää asiakas</title>
 </head>
 <body onkeydown="tutkiKey(event)">
 <form id="tiedot">
@@ -30,48 +30,31 @@
 				<td><input type="text" name="sukunimi" id="sukunimi"></td>
 				<td><input type="text" name="puhelin" id="puhelin"></td>
 				<td><input type="text" name="sposti" id="sposti"></td> 
-				<td><input type="button" value="Tallenna" id="tallenna" onclick="vieTiedot()"></td>
+				<td><input type="button" name="nappi" id="tallenna" value="Lisää" onclick="lisaaTiedot()"></td>
 			</tr>
 		</tbody>
 	</table>
-	<input type="hidden" name="asiakas_id" id="asiakas_id">
 </form>
 <span id="ilmo"></span>
 </body>
 <script>
 function tutkiKey(event){
 	if(event.keyCode==13){//Enter
-		vieTiedot();
+		lisaaTiedot();
 	}		
 }
 
 document.getElementById("etunimi").focus();//viedään kursori etunimi-kenttään sivun latauksen yhteydessä
 
-//Haetaan muutettavan asiakkaan tiedot. Kutsutaan backin GET-metodia ja välitetään kutsun mukana muutettavan tiedon id
-var asiakas_id = requestURLParam("asiakas_id");
-fetch("asiakkaat/haeyksi/" + asiakas_id,{
-	method: 'GET'	
-	})
-.then( function (response) {//Odotetaan vastausta ja muutetaan JSON-vastausteksti objektiksi
-	return response.json()
-})
-.then( function (responseJson) {//Otetaan vastaan objekti responseJson-parametrissä	
-	console.log(responseJson);
-	document.getElementById("etunimi").value = responseJson.etunimi;
-	document.getElementById("sukunimi").value = responseJson.sukunimi;
-	document.getElementById("puhelin").value = responseJson.puhelin;
-	document.getElementById("sposti").value = responseJson.sposti;
-	document.getElementById("asiakas_id").value = responseJson.asiakas_id;	
-});	
-
-function vieTiedot(){
+//funktio tietojen lisäämistä varten. Kutsutaan backin POST-metodia ja välitetään kutsun mukana uudet tiedot json-stringinä.
+function lisaaTiedot(){
 	var ilmo="";
 	if(document.getElementById("etunimi").value.length<2){
 		ilmo="Etunimi on liian lyhyt!";
 	}else if(document.getElementById("sukunimi").value.length<2){
 		ilmo="sukunimi on liian lyhyt!";		
 	}else if(document.getElementById("puhelin").value.length<7){
-		ilmo="Puhelinnumero on liian lyhyt!";		
+		ilmo="Puhelinnumero on liian lyhyt!!";		
 	}else if(document.getElementById("sposti").value.length<6){
 		ilmo="Sähköposti on liian lyhyt!";		
 	}
@@ -86,10 +69,9 @@ function vieTiedot(){
 	document.getElementById("sposti").value=siivoa(document.getElementById("sposti").value);	
 	
 	var formJsonStr=formDataToJSON(document.getElementById("tiedot")); //muutetaan lomakkeen tiedot json-stringiksi
-	console.log(formJsonStr);
 	//Lähetään muutetut tiedot backendiin
 	fetch("asiakkaat",{//Lähetetään kutsu backendiin
-	      method: 'PUT',
+	      method: 'POST',
 	      body:formJsonStr
 	    })
 	.then( function (response) {//Odotetaan vastausta ja muutetaan JSON-vastaus objektiksi
@@ -98,13 +80,13 @@ function vieTiedot(){
 	.then( function (responseJson) {//Otetaan vastaan objekti responseJson-parametrissä	
 		var vastaus = responseJson.response;		
 		if(vastaus==0){
-			document.getElementById("ilmo").innerHTML= "Tietojen päivitys epäonnistui";
+			document.getElementById("ilmo").innerHTML= "Asiakkaan lisääminen epäonnistui";
         }else if(vastaus==1){	        	
-        	document.getElementById("ilmo").innerHTML= "Tietojen päivitys onnistui";			      	
+        	document.getElementById("ilmo").innerHTML= "Asiakkaan lisääminen onnistui";			      	
 		}	
 		setTimeout(function(){ document.getElementById("ilmo").innerHTML=""; }, 5000);
 	});	
 	document.getElementById("tiedot").reset(); //tyhjennetään tiedot -lomake
-}	
+}
 </script>
 </html>
